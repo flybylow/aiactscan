@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wifi, WifiOff, AlertCircle, Loader2 } from 'lucide-react';
+import { Phone, PhoneOff, AlertCircle, Loader2 } from 'lucide-react';
 
 interface ConnectionStatusProps {
   status: 'connected' | 'connecting' | 'disconnected' | 'error';
@@ -10,7 +10,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ status }) =>
     switch (status) {
       case 'connected':
         return {
-          icon: Wifi,
+          icon: Phone,
           text: 'Connected',
           color: 'text-green-600',
           bgColor: 'bg-green-50',
@@ -34,7 +34,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ status }) =>
         };
       default:
         return {
-          icon: WifiOff,
+          icon: PhoneOff,
           text: 'Disconnected',
           color: 'text-gray-600',
           bgColor: 'bg-gray-50',
