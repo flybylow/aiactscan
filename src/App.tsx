@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useConversation } from '@11labs/react';
 import { ChatModule } from './components/ChatModule';
-import { ConnectionStatus } from './components/ConnectionStatus';
 import { ConversationControls } from './components/ConversationControls';
 import { RiskIndicator } from './components/RiskIndicator';
 import { RiskDashboard } from './components/RiskDashboard';
@@ -718,7 +717,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto max-w-6xl h-screen flex flex-col">
+      <div className="container mx-auto max-w-7xl h-screen flex flex-col">
         {/* Header */}
         <div className="flex-shrink-0 p-6 bg-white/80 backdrop-blur-sm border-b border-white/20">
           <div className="flex items-center justify-between">
@@ -772,9 +771,9 @@ function App() {
 
         {/* Main Content */}
         <div className="flex-1 overflow-hidden p-6">
-          <div className="max-w-4xl mx-auto h-full flex flex-col lg:flex-row gap-6">
+          <div className="max-w-6xl mx-auto h-full flex flex-col lg:flex-row gap-6">
             {/* Chat Module */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <ChatModule
                 messages={chatMessages}
                 onSendMessage={handleSendMessage}
@@ -785,16 +784,9 @@ function App() {
             </div>
 
             {/* Controls Sidebar */}
-            <div className="lg:w-80 flex flex-col gap-4">
-              {/* Connection Status */}
+            <div className="lg:w-80 flex-shrink-0 flex flex-col gap-4">
+              {/* Conversation Controls */}
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                <h3 className="font-semibold text-gray-900 mb-3">Connection Status</h3>
-                <ConnectionStatus status={connectionStatus} />
-              </div>
-
-              {/* Voice Controls */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                <h3 className="font-semibold text-gray-900 mb-3">Voice Controls</h3>
                 <ConversationControls
                   isConnected={conversation.status === 'connected'}
                   isConnecting={isConnecting}
@@ -813,6 +805,33 @@ function App() {
                   <p>2. <strong>Describe</strong> your AI system</p>
                   <p>3. <strong>Get instant</strong> EU AI Act assessment</p>
                   <p>4. <strong>Review</strong> compliance requirements</p>
+                </div>
+              </div>
+
+              {/* EU AI Act Categories */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <h3 className="font-semibold text-gray-900 mb-3">EU AI Act Categories</h3>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="font-medium">PROHIBITED</span>
+                    <span className="text-gray-500">- Banned systems</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                    <span className="font-medium">HIGH-RISK</span>
+                    <span className="text-gray-500">- Strict compliance</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <span className="font-medium">LIMITED</span>
+                    <span className="text-gray-500">- Transparency required</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="font-medium">MINIMAL</span>
+                    <span className="text-gray-500">- No specific obligations</span>
+                  </div>
                 </div>
               </div>
             </div>
