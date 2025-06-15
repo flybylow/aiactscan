@@ -857,13 +857,6 @@ function App() {
             onToggleTextInput={handleToggleTextInput}
           />
         </div>
-
-        {/* Connection Status at Bottom */}
-        <div className="flex-shrink-0 p-4 bg-white/60 backdrop-blur-sm">
-          <div className="flex justify-center">
-            <ConnectionStatus status={connectionStatus} />
-          </div>
-        </div>
       </div>
 
       {/* Risk Notifications */}
