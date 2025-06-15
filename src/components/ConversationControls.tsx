@@ -1,10 +1,12 @@
 import React from 'react';
 import { PhoneCall, PhoneOff, Keyboard, Loader2 } from 'lucide-react';
+import { ConnectionStatus } from './ConnectionStatus';
 
 interface ConversationControlsProps {
   isConnected: boolean;
   isConnecting?: boolean;
   showTextInput: boolean;
+  connectionStatus: 'connected' | 'connecting' | 'disconnected' | 'error';
   onToggleConnection: () => void;
   onToggleTextInput: () => void;
 }
@@ -13,6 +15,7 @@ export const ConversationControls: React.FC<ConversationControlsProps> = ({
   isConnected,
   isConnecting = false,
   showTextInput,
+  connectionStatus,
   onToggleConnection,
   onToggleTextInput
 }) => {
@@ -66,6 +69,9 @@ export const ConversationControls: React.FC<ConversationControlsProps> = ({
           <PhoneCall className="w-6 h-6" />
         )}
       </button>
+
+      {/* Connection Status next to call button */}
+      <ConnectionStatus status={connectionStatus} />
     </div>
   );
 };

@@ -696,7 +696,7 @@ function App() {
                 <Scale className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Scan your AI Act risk (free)</h1>
+                <h1 className="text-xl font-bold text-gray-900">AI Act Scan</h1>
                 <p className="text-sm text-gray-600">Compliance Assistant</p>
               </div>
             </div>
@@ -735,8 +735,6 @@ function App() {
                   </span>
                 )}
               </button>
-              
-              <ConnectionStatus status={connectionStatus} />
             </div>
           </div>
         </div>
@@ -795,6 +793,7 @@ function App() {
             isConnected={conversation.status === 'connected'}
             isConnecting={isConnecting}
             showTextInput={showTextInput}
+            connectionStatus={connectionStatus}
             onToggleConnection={handleToggleConnection}
             onToggleTextInput={handleToggleTextInput}
           />
