@@ -804,10 +804,9 @@ function App() {
               <div className="flex items-center justify-center h-full min-h-[200px]">
                 <div className="text-center text-gray-500">
                   <Scale className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-                  <p className="text-lg font-medium mb-2">Welcome to AI Act Scan</p>
+                  <p className="text-lg font-medium mb-2">Scan your AI risk for free</p>
                   <p className="text-sm">Start a conversation to assess your AI system's risk level</p>
                   <p className="text-xs mt-2 text-gray-400">Describe your AI system to get a compliance assessment</p>
-                  <p className="text-xs mt-1 text-gray-400">Risk analysis via ElevenLabs post-call webhooks</p>
                   {conversationId && (
                     <p className="text-xs mt-1 text-blue-500">Conversation ID: {conversationId}</p>
                   )}
