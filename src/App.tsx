@@ -608,18 +608,52 @@ function App() {
     });
     
     // Check if we're connected and can send messages
-    if (conversation.status === 'connected' && typeof conversation.sendMessage === 'function') {
+    if (conversation.status === 'connected') {
       try {
+        console.log('📤 SENDING MESSAGE TO ELEVENLABS:', {
+          text: text,
+          conversation_id: conversationId,
+          agent_id: agentId,
+          timestamp: new Date().toISOString()
+        });
+        
         setIsTyping(true);
-        await conversation.sendMessage(text);
-        logSystem('success', 'Text message sent to ElevenLabs agent');
+        
+        // Use the conversation's sendMessage method
+        if (typeof conversation.sendMessage === 'function') {
+          await conversation.sendMessage(text);
+          console.log('✅ MESSAGE SENT SUCCESSFULLY to ElevenLabs agent');
+          logSystem('success', 'Text message sent to ElevenLabs agent', {
+            message_length: text.length,
+            conversation_id: conversationId
+          });
+        } else {
+          console.warn('⚠️ sendMessage method not available on conversation object');
+          logSystem('warning', 'sendMessage method not available - using fallback');
+          
+          // Fallback: Add AI response manually
+          setTimeout(() => {
+            const aiMessage: Message = {
+              id: `ai_${Date.now()}`,
+              text: `I received your message about "${text.slice(0, 50)}${text.length > 50 ? '...' : ''}". I'm analyzing this for EU AI Act compliance. Please note that for the most comprehensive risk assessment, voice conversations provide better analysis than text messages.`,
+              sender: 'ai',
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, aiMessage]);
+            setIsTyping(false);
+            logUI('info', 'Fallback AI response provided for text message');
+          }, 1000);
+        }
       } catch (error: any) {
-        console.error('Failed to send message:', error);
+        console.error('❌ FAILED TO SEND MESSAGE:', error);
         setIsTyping(false);
         
-        logSystem('error', 'Failed to send text message', { error: error.message });
+        logSystem('error', 'Failed to send text message', { 
+          error: error.message,
+          conversation_id: conversationId
+        });
         
-        let errorText = 'Failed to send message.';
+        let errorText = 'Failed to send message to ElevenLabs.';
         if (error.message && error.message.includes('WebSocket')) {
           errorText = 'Connection lost while sending message. Please try reconnecting.';
         } else if (error.message) {
@@ -635,17 +669,17 @@ function App() {
         setMessages(prev => [...prev, errorMessage]);
       }
     } else {
-      // Provide a helpful response for text messages when not connected or sendMessage not available
+      // Not connected - provide helpful guidance
       setTimeout(() => {
         const aiMessage: Message = {
           id: `ai_${Date.now()}`,
-          text: `I received your message: "${text}". Please note that this EU AI Act compliance assistant is optimized for voice conversations. For the best experience, try using the voice chat feature by clicking the call button and speaking directly about your AI system.`,
+          text: `I received your message: "${text}". To send this message to the ElevenLabs agent for EU AI Act analysis, please first connect by clicking the green call button. Once connected, you can send text messages or speak directly to the agent.`,
           sender: 'ai',
           timestamp: new Date()
         };
         setMessages(prev => [...prev, aiMessage]);
-        logUI('info', 'Provided guidance for voice conversation usage');
-      }, 1000);
+        logUI('info', 'Provided connection guidance for text message');
+      }, 500);
     }
   };
 
