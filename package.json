@@ -22,7 +22,8 @@
     "@radix-ui/react-button": "^1.0.4",
     "@radix-ui/react-card": "^1.0.4",
     "@radix-ui/react-input": "^1.0.4",
-    "@radix-ui/react-tooltip": "^1.0.7"
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "@radix-ui/react-slot": "^1.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
