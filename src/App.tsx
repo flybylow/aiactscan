@@ -44,7 +44,6 @@ function App() {
   const [realTimeRiskScore, setRealTimeRiskScore] = useState<number | undefined>(undefined);
   const [riskStatusUpdated, setRiskStatusUpdated] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [webhookDebugInfo, setWebhookDebugInfo] = useState<string[]>([]);
   const [showPostConversationSummary, setShowPostConversationSummary] = useState(false);
   const [conversationEnded, setConversationEnded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -230,15 +229,6 @@ function App() {
     };
   }, [logDatabase, logUI, conversationEnded]);
 
-  // Add webhook debugging
-  const addWebhookDebug = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setWebhookDebugInfo(prev => [`[${timestamp}] ${message}`, ...prev.slice(0, 9)]);
-    
-    // Also add to analysis logs
-    logWebhook('info', message);
-  };
-
   const conversation = useConversation({
     apiKey: apiKey,
     onConnect: () => {
@@ -259,7 +249,6 @@ function App() {
       // Generate a conversation ID for tracking
       const newConversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       setConversationId(newConversationId);
-      addWebhookDebug(`🎯 New conversation started: ${newConversationId}`);
       console.log('🎯 CONVERSATION - Started with ID:', newConversationId);
       
       logAnalysis('info', 'New EU AI Act assessment conversation started', {
@@ -279,7 +268,6 @@ function App() {
       logSystem('info', 'Disconnected from ElevenLabs');
       
       if (conversationId) {
-        addWebhookDebug(`🏁 Conversation ended: ${conversationId} - EU AI Act analysis will be processed`);
         console.log('🏁 CONVERSATION - Ended:', conversationId);
         
         logAnalysis('info', 'Conversation ended - EU AI Act post-call analysis will be triggered', {
@@ -302,7 +290,6 @@ function App() {
       setIsUserSpeaking(false);
       setIsConnecting(false);
       
-      addWebhookDebug(`❌ Connection error: ${error.message}`);
       logSystem('error', 'ElevenLabs conversation error', {
         error: error.message,
         timestamp: new Date().toISOString()
@@ -367,7 +354,6 @@ function App() {
       
       // Log message for webhook debugging
       const messageType = isUserMessage ? 'USER' : 'AGENT';
-      addWebhookDebug(`💬 ${messageType}: ${message.message?.slice(0, 50)}...`);
       console.log(`💬 CONVERSATION ${messageType} MESSAGE:`, {
         conversationId,
         message: message.message,
@@ -395,7 +381,6 @@ function App() {
         );
         
         if (hasEURiskKeywords) {
-          addWebhookDebug(`🇪🇺 EU AI Act keywords detected in user message`);
           console.log('🇪🇺 EU AI ACT DETECTION - Keywords found in user message:', message.message);
           
           const matchedKeywords = euRiskKeywords.filter(keyword => 
@@ -423,25 +408,21 @@ function App() {
         console.log('User is speaking');
         setIsTyping(true);
         setIsUserSpeaking(true);
-        addWebhookDebug(`🎤 User started speaking`);
         logSystem('info', 'User started speaking - listening for EU AI Act keywords');
       } else if (mode.mode === 'speaking') {
         console.log('AI is speaking');
         setIsTyping(false);
         setIsUserSpeaking(false);
-        addWebhookDebug(`🗣️ AI started speaking`);
         logSystem('info', 'AI agent started speaking');
       } else if (mode.mode === 'thinking') {
         console.log('AI is thinking');
         setIsTyping(true);
         setIsUserSpeaking(false);
-        addWebhookDebug(`🤔 AI is thinking`);
         logSystem('info', 'AI agent is processing and thinking');
       } else {
         console.log('Mode idle');
         setIsTyping(false);
         setIsUserSpeaking(false);
-        addWebhookDebug(`💤 Conversation idle`);
         logSystem('info', 'Conversation is idle');
       }
     },
@@ -536,7 +517,6 @@ function App() {
     if (conversation.status === 'connected') {
       try {
         console.log('Ending conversation session...');
-        addWebhookDebug(`🛑 Ending conversation session - EU AI Act analysis will be triggered`);
         logSystem('info', 'Ending conversation session - triggering EU AI Act post-call analysis');
         await conversation.endSession();
       } catch (error) {
@@ -559,7 +539,6 @@ function App() {
     } else {
       setIsConnecting(true);
       setConnectionStatus('connecting');
-      addWebhookDebug(`🔄 Starting conversation session`);
       logSystem('info', 'Starting new EU AI Act assessment conversation');
       
       try {
@@ -571,7 +550,6 @@ function App() {
         console.error('Failed to start session:', error);
         setConnectionStatus('error');
         setIsConnecting(false);
-        addWebhookDebug(`❌ Failed to start session: ${error.message}`);
         
         logSystem('error', 'Failed to start conversation session', {
           error: error.message,
@@ -622,7 +600,6 @@ function App() {
     };
     
     setMessages(prev => [...prev, userMessage]);
-    addWebhookDebug(`💬 TEXT MESSAGE: ${text.slice(0, 50)}...`);
     
     logAnalysis('info', 'Text message sent for EU AI Act analysis', {
       conversation_id: conversationId,
@@ -762,20 +739,6 @@ function App() {
               <ConnectionStatus status={connectionStatus} />
             </div>
           </div>
-          
-          {/* Webhook Debug Info */}
-          {webhookDebugInfo.length > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="text-xs font-medium text-blue-700 mb-2">EU AI Act Analysis Log:</div>
-              <div className="space-y-1 max-h-20 overflow-y-auto">
-                {webhookDebugInfo.map((info, index) => (
-                  <div key={index} className="text-xs font-mono text-blue-600">
-                    {info}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Messages Area */}
