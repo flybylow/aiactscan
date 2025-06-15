@@ -244,7 +244,7 @@ src/
 ## 📚 Documentation & Knowledge Transfer
 
 ### Essential Files for Successor
-1. **`PROJECT_SUMMARY.md`** (this file) - Complete project overview
+1. **`docs/PROJECT_SUMMARY.md`** (this file) - Complete project overview
 2. **`README.md`** - User-facing documentation and setup instructions
 3. **`docs/`** folder - Detailed setup and troubleshooting guides
 4. **`src/components/AdminPage.tsx`** - Comprehensive admin interface
