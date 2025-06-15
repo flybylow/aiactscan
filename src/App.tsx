@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useConversation } from '@11labs/react';
-import { ChatModule } from './components/ChatModule';
+import { MessageBubble } from './components/MessageBubble';
+import { ConnectionStatus } from './components/ConnectionStatus';
+import { TypingIndicator } from './components/TypingIndicator';
 import { ConversationControls } from './components/ConversationControls';
+import { ChatInput } from './components/ChatInput';
 import { RiskIndicator } from './components/RiskIndicator';
 import { RiskDashboard } from './components/RiskDashboard';
 import { AdminPage } from './components/AdminPage';
@@ -9,12 +12,12 @@ import { RiskNotification } from './components/RiskNotification';
 import { PostConversationSummary } from './components/PostConversationSummary';
 import { useRiskAssessments } from './hooks/useRiskAssessments';
 import { useAnalysisLogs } from './hooks/useAnalysisLogs';
-import { Scale, Shield, Settings } from 'lucide-react';
+import { Scale, Shield, Settings, HelpCircle } from 'lucide-react';
 
 interface Message {
   id: string;
-  content: string;
-  role: 'user' | 'agent';
+  text: string;
+  sender: 'user' | 'ai';
   timestamp: Date;
 }
 
@@ -31,7 +34,7 @@ function App() {
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'error'>('disconnected');
   const [currentMode, setCurrentMode] = useState<string>('idle');
   const [isUserSpeaking, setIsUserSpeaking] = useState(false);
-  const [showTextInput, setShowTextInput] = useState(true); // Default to true for better UX
+  const [showTextInput, setShowTextInput] = useState(false);
   const [showRiskDashboard, setShowRiskDashboard] = useState(false);
   const [showAdminPage, setShowAdminPage] = useState(false);
   const [riskNotifications, setRiskNotifications] = useState<RiskNotificationData[]>([]);
@@ -43,6 +46,8 @@ function App() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showPostConversationSummary, setShowPostConversationSummary] = useState(false);
   const [conversationEnded, setConversationEnded] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Risk assessment hook
   const { 
@@ -257,7 +262,7 @@ function App() {
       setConnectionStatus('disconnected');
       setCurrentMode('idle');
       setIsUserSpeaking(false);
-      setShowTextInput(true); // Keep text input available
+      setShowTextInput(false);
       setIsConnecting(false);
       setConversationEnded(true);
       
@@ -312,8 +317,8 @@ function App() {
       
       const errorMessage: Message = {
         id: Date.now().toString(),
-        content: errorText,
-        role: 'agent',
+        text: errorText,
+        sender: 'ai',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -341,8 +346,8 @@ function App() {
       
       const newMessage: Message = {
         id: Date.now().toString(),
-        content: message.message || 'Message received',
-        role: isUserMessage ? 'user' : 'agent',
+        text: message.message || 'Message received',
+        sender: isUserMessage ? 'user' : 'ai',
         timestamp: new Date()
       };
       
@@ -442,6 +447,14 @@ function App() {
     }
   });
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
   const handleToggleConnection = async () => {
     // Prevent multiple connection attempts
     if (isConnecting) {
@@ -454,8 +467,8 @@ function App() {
     if (!apiKey || apiKey === 'your_elevenlabs_api_key_here') {
       const errorMessage: Message = {
         id: Date.now().toString(),
-        content: 'ElevenLabs API key is missing or invalid. Please update your .env file with a valid API key from your ElevenLabs account.',
-        role: 'agent',
+        text: 'ElevenLabs API key is missing or invalid. Please update your .env file with a valid API key from your ElevenLabs account.',
+        sender: 'ai',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -467,8 +480,8 @@ function App() {
     if (!agentId || agentId === 'your_agent_id_here') {
       const errorMessage: Message = {
         id: Date.now().toString(),
-        content: 'ElevenLabs Agent ID is missing or invalid. Please update your .env file with a valid agent ID from your ElevenLabs account.',
-        role: 'agent',
+        text: 'ElevenLabs Agent ID is missing or invalid. Please update your .env file with a valid agent ID from your ElevenLabs account.',
+        sender: 'ai',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -480,8 +493,8 @@ function App() {
     if (!apiKey.startsWith('sk_')) {
       const errorMessage: Message = {
         id: Date.now().toString(),
-        content: 'Invalid API key format. ElevenLabs API keys should start with "sk_". Please check your .env file.',
-        role: 'agent',
+        text: 'Invalid API key format. ElevenLabs API keys should start with "sk_". Please check your .env file.',
+        sender: 'ai',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -493,8 +506,8 @@ function App() {
     if (!agentId.startsWith('agent_')) {
       const errorMessage: Message = {
         id: Date.now().toString(),
-        content: 'Invalid Agent ID format. ElevenLabs Agent IDs should start with "agent_". Please check your .env file.',
-        role: 'agent',
+        text: 'Invalid Agent ID format. ElevenLabs Agent IDs should start with "agent_". Please check your .env file.',
+        sender: 'ai',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -565,8 +578,8 @@ function App() {
         
         const errorMessage: Message = {
           id: Date.now().toString(),
-          content: errorText,
-          role: 'agent',
+          text: errorText,
+          sender: 'ai',
           timestamp: new Date()
         };
         setMessages(prev => [...prev, errorMessage]);
@@ -582,8 +595,8 @@ function App() {
   const handleSendMessage = async (text: string) => {
     const userMessage: Message = {
       id: `user_${Date.now()}`,
-      content: text,
-      role: 'user',
+      text,
+      sender: 'user',
       timestamp: new Date()
     };
     
@@ -623,8 +636,8 @@ function App() {
           setTimeout(() => {
             const aiMessage: Message = {
               id: `ai_${Date.now()}`,
-              content: `I received your message about "${text.slice(0, 50)}${text.length > 50 ? '...' : ''}". I'm analyzing this for EU AI Act compliance. Please note that for the most comprehensive risk assessment, voice conversations provide better analysis than text messages.`,
-              role: 'agent',
+              text: `I received your message about "${text.slice(0, 50)}${text.length > 50 ? '...' : ''}". I'm analyzing this for EU AI Act compliance. Please note that for the most comprehensive risk assessment, voice conversations provide better analysis than text messages.`,
+              sender: 'ai',
               timestamp: new Date()
             };
             setMessages(prev => [...prev, aiMessage]);
@@ -650,8 +663,8 @@ function App() {
         
         const errorMessage: Message = {
           id: `error_${Date.now()}`,
-          content: errorText,
-          role: 'agent',
+          text: errorText,
+          sender: 'ai',
           timestamp: new Date()
         };
         setMessages(prev => [...prev, errorMessage]);
@@ -661,8 +674,8 @@ function App() {
       setTimeout(() => {
         const aiMessage: Message = {
           id: `ai_${Date.now()}`,
-          content: `I received your message: "${text}". To send this message to the ElevenLabs agent for EU AI Act analysis, please first connect by clicking the green call button. Once connected, you can send text messages or speak directly to the agent.`,
-          role: 'agent',
+          text: `I received your message: "${text}". To send this message to the ElevenLabs agent for EU AI Act analysis, please first connect by clicking the green call button. Once connected, you can send text messages or speak directly to the agent.`,
+          sender: 'ai',
           timestamp: new Date()
         };
         setMessages(prev => [...prev, aiMessage]);
@@ -707,17 +720,9 @@ function App() {
 
   const currentRiskStatus = getCurrentRiskStatus();
 
-  // Convert Message interface to match ChatModule expectations
-  const chatMessages = messages.map(msg => ({
-    id: msg.id,
-    content: msg.content,
-    role: msg.role,
-    timestamp: msg.timestamp
-  }));
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto max-w-7xl h-screen flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50">
+      <div className="container mx-auto max-w-4xl h-screen flex flex-col">
         {/* Header */}
         <div className="flex-shrink-0 p-6 bg-white/80 backdrop-blur-sm border-b border-white/20">
           <div className="flex items-center justify-between">
@@ -738,6 +743,29 @@ function App() {
                   riskLevel={currentRiskStatus.level}
                   riskScore={currentRiskStatus.score}
                 />
+              </div>
+              
+              {/* How It Works - Hidden behind tooltip */}
+              <div className="relative">
+                <button
+                  onMouseEnter={() => setShowHowItWorks(true)}
+                  onMouseLeave={() => setShowHowItWorks(false)}
+                  className="w-10 h-10 rounded-full bg-white/80 hover:bg-white border border-gray-200 flex items-center justify-center transition-colors"
+                  title="How It Works"
+                >
+                  <HelpCircle className="w-4 h-4 text-gray-600" />
+                </button>
+                
+                {showHowItWorks && (
+                  <div className="absolute top-12 right-0 z-50 w-64 p-4 bg-white rounded-lg shadow-lg border border-gray-200">
+                    <h3 className="font-semibold text-gray-900 mb-2">How It Works</h3>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <p>1. Connect to start voice chat</p>
+                      <p>2. Describe your AI system</p>
+                      <p>3. Get instant EU AI Act assessment</p>
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* Admin Panel Button */}
@@ -769,72 +797,71 @@ function App() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden p-6">
-          <div className="max-w-6xl mx-auto h-full flex flex-col lg:flex-row gap-6">
-            {/* Chat Module */}
-            <div className="flex-1 min-w-0">
-              <ChatModule
-                messages={chatMessages}
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-1">
+          <div className="max-w-3xl mx-auto">
+            {messages.length === 0 && (
+              <div className="flex items-center justify-center h-full min-h-[200px]">
+                <div className="text-center text-gray-500">
+                  <Scale className="w-12 h-12 mx-auto mb-4 text-blue-400" />
+                  <p className="text-lg font-medium mb-2">Welcome to AI Act Scan</p>
+                  <p className="text-sm">Start a conversation to assess your AI system's risk level</p>
+                  <p className="text-xs mt-2 text-gray-400">Describe your AI system to get a compliance assessment</p>
+                  <p className="text-xs mt-1 text-gray-400">Risk analysis via ElevenLabs post-call webhooks</p>
+                  {conversationId && (
+                    <p className="text-xs mt-1 text-blue-500">Conversation ID: {conversationId}</p>
+                  )}
+                  {(!apiKey || apiKey === 'your_elevenlabs_api_key_here' || !agentId || agentId === 'your_agent_id_here') && (
+                    <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                      <p className="text-sm text-red-600 font-medium mb-2">Configuration Required</p>
+                      <p className="text-xs text-red-500">
+                        Please update your .env file with valid ElevenLabs API key and Agent ID
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {messages.map((message) => (
+              <MessageBubble key={message.id} message={message} />
+            ))}
+            
+            {isTyping && <TypingIndicator />}
+            
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Chat Input */}
+        {showTextInput && (
+          <div className="flex-shrink-0 px-6 pb-4">
+            <div className="max-w-3xl mx-auto">
+              <ChatInput 
                 onSendMessage={handleSendMessage}
-                isConnected={conversation.status === 'connected'}
-                isTyping={isTyping}
                 disabled={false}
+                placeholder="Describe your AI system for EU AI Act compliance assessment..."
               />
             </div>
+          </div>
+        )}
 
-            {/* Controls Sidebar */}
-            <div className="lg:w-80 flex-shrink-0 flex flex-col gap-4">
-              {/* Conversation Controls */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                <ConversationControls
-                  isConnected={conversation.status === 'connected'}
-                  isConnecting={isConnecting}
-                  showTextInput={showTextInput}
-                  connectionStatus={connectionStatus}
-                  onToggleConnection={handleToggleConnection}
-                  onToggleTextInput={handleToggleTextInput}
-                />
-              </div>
+        {/* Controls */}
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm border-t border-white/20">
+          <ConversationControls
+            isConnected={conversation.status === 'connected'}
+            isConnecting={isConnecting}
+            showTextInput={showTextInput}
+            connectionStatus={connectionStatus}
+            onToggleConnection={handleToggleConnection}
+            onToggleTextInput={handleToggleTextInput}
+          />
+        </div>
 
-              {/* Quick Info */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                <h3 className="font-semibold text-gray-900 mb-3">How It Works</h3>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>1. <strong>Connect</strong> to start voice chat</p>
-                  <p>2. <strong>Describe</strong> your AI system</p>
-                  <p>3. <strong>Get instant</strong> EU AI Act assessment</p>
-                  <p>4. <strong>Review</strong> compliance requirements</p>
-                </div>
-              </div>
-
-              {/* EU AI Act Categories */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                <h3 className="font-semibold text-gray-900 mb-3">EU AI Act Categories</h3>
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span className="font-medium">PROHIBITED</span>
-                    <span className="text-gray-500">- Banned systems</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                    <span className="font-medium">HIGH-RISK</span>
-                    <span className="text-gray-500">- Strict compliance</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <span className="font-medium">LIMITED</span>
-                    <span className="text-gray-500">- Transparency required</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="font-medium">MINIMAL</span>
-                    <span className="text-gray-500">- No specific obligations</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Connection Status at Bottom */}
+        <div className="flex-shrink-0 p-4 bg-white/60 backdrop-blur-sm">
+          <div className="flex justify-center">
+            <ConnectionStatus status={connectionStatus} />
           </div>
         </div>
       </div>
