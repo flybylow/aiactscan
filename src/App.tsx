@@ -156,6 +156,7 @@ function App() {
 
       // Show post-conversation summary if conversation has ended
       if (conversationEnded) {
+        console.log('📋 APP - Showing post-conversation summary with webhook data');
         setShowPostConversationSummary(true);
         logUI('info', 'Showing post-conversation summary with final risk assessment');
       }
@@ -216,6 +217,7 @@ function App() {
 
       // Show post-conversation summary if conversation has ended
       if (conversationEnded) {
+        console.log('📋 APP - Showing post-conversation summary with comprehensive webhook data');
         setShowPostConversationSummary(true);
         logUI('info', 'Showing post-conversation summary with final risk assessment');
       }
@@ -285,19 +287,12 @@ function App() {
           ended_at: new Date().toISOString()
         });
 
-        // Show post-conversation summary after a delay to allow webhook processing
+        // Show post-conversation summary immediately after conversation ends
+        console.log('📋 APP - Conversation ended, showing post-conversation summary');
         setTimeout(() => {
-          if (currentRiskAssessment) {
-            setShowPostConversationSummary(true);
-            logUI('info', 'Showing post-conversation summary with final assessment');
-          } else {
-            // If no assessment yet, wait a bit longer for webhook
-            setTimeout(() => {
-              setShowPostConversationSummary(true);
-              logUI('info', 'Showing post-conversation summary (waiting for webhook)');
-            }, 3000);
-          }
-        }, 1000);
+          setShowPostConversationSummary(true);
+          logUI('info', 'Post-conversation summary triggered after call end');
+        }, 1000); // Small delay to allow for any immediate webhook processing
       }
     },
     onError: (error) => {
@@ -551,6 +546,15 @@ function App() {
         setConnectionStatus('disconnected');
         setCurrentMode('idle');
         setIsUserSpeaking(false);
+        setConversationEnded(true);
+        
+        // Still show summary even if endSession fails
+        if (conversationId && messages.length > 0) {
+          setTimeout(() => {
+            setShowPostConversationSummary(true);
+            logUI('info', 'Post-conversation summary triggered after forced disconnect');
+          }, 1000);
+        }
       }
     } else {
       setIsConnecting(true);
@@ -681,6 +685,11 @@ function App() {
       risk_level: summary.risk_level,
       risk_score: summary.risk_score
     });
+  };
+
+  const handleCloseSummary = () => {
+    setShowPostConversationSummary(false);
+    logUI('info', 'Post-conversation summary closed');
   };
 
   // Determine current risk status - use webhook data
@@ -847,7 +856,7 @@ function App() {
         isConnected={conversation.status === 'connected'}
         onSummaryGenerated={handleSummaryGenerated}
         showSummary={showPostConversationSummary}
-        onClose={() => setShowPostConversationSummary(false)}
+        onClose={handleCloseSummary}
         currentRiskAssessment={currentRiskAssessment}
       />
 
