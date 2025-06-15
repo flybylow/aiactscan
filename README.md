@@ -4,7 +4,7 @@
 
 A production-ready web application that analyzes conversations with AI systems to determine their risk level under the EU AI Act. Get instant compliance assessments, risk categorization, and regulatory guidance.
 
-![AI Act Scan Demo](https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=AI+Act+Scan+Demo)
+![AI Act Scan Demo](./public/Scherm­afbeelding%202025-06-15%20om%2023.47.39.png)
 
 ## 🎯 What It Does
 
@@ -280,6 +280,16 @@ Access the admin panel via the settings icon for:
 - **Trend monitoring** for risk patterns
 - **Compliance reporting** with detailed breakdowns
 - **Audit trails** for regulatory compliance
+
+## 📚 Documentation
+
+Detailed setup and troubleshooting guides are available in the `docs/` folder:
+
+- **[Setup Guide](./docs/WEBHOOK_SECRET_SETUP.md)** - Complete installation instructions
+- **[Testing Guide](./docs/EU_AI_ACT_TESTING_GUIDE.md)** - How to test EU AI Act assessments
+- **[Webhook Configuration](./docs/WEBHOOK_SECRET_CONFIGURATION.md)** - Webhook setup details
+- **[Troubleshooting](./docs/ELEVENLABS_WEBHOOK_FIX.md)** - Common issues and solutions
+- **[Keywords Guide](./docs/RISK_KEYWORDS_GUIDE.md)** - Customizing risk keywords
 
 ## 🤝 Contributing
 
