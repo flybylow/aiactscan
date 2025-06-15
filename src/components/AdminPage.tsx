@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings, TestTube, Database, Webhook, FileText, ExternalLink, Copy, CheckCircle, AlertTriangle, RefreshCw, Key, Shield, Scale, Zap, Clock } from 'lucide-react';
+import { X, Settings, TestTube, Database, Webhook, FileText, ExternalLink, Copy, CheckCircle, AlertTriangle, RefreshCw, Key, Shield, Scale, Zap, Clock, MessageSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { LogsPanel } from './LogsPanel';
+import { useAnalysisLogs } from '../hooks/useAnalysisLogs';
 
 interface AdminPageProps {
   isOpen: boolean;
@@ -8,15 +10,27 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'status' | 'setup' | 'testing' | 'database'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'setup' | 'testing' | 'database' | 'livechat'>('status');
   const [secretStatus, setSecretStatus] = useState<'checking' | 'found' | 'missing' | 'error'>('checking');
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [dbTestResults, setDbTestResults] = useState<any[]>([]);
   const [runningDbTests, setRunningDbTests] = useState(false);
+  const [showLogsPanel, setShowLogsPanel] = useState(false);
 
   const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-webhook`;
+
+  // Analysis logs hook
+  const {
+    logs,
+    clearLogs,
+    logWebhook,
+    logAnalysis,
+    logDatabase,
+    logUI,
+    logSystem
+  } = useAnalysisLogs();
 
   useEffect(() => {
     if (isOpen) {
@@ -337,7 +351,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ isOpen, onClose }) => {
               { id: 'status', label: 'System Status', icon: Shield },
               { id: 'setup', label: 'Setup Guide', icon: Webhook },
               { id: 'testing', label: 'Testing Tools', icon: TestTube },
-              { id: 'database', label: 'Database Tests', icon: Database }
+              { id: 'database', label: 'Database Tests', icon: Database },
+              { id: 'livechat', label: 'Live Chat', icon: MessageSquare }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -678,7 +693,114 @@ export const AdminPage: React.FC<AdminPageProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           )}
+
+          {activeTab === 'livechat' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Live Chat Analysis</h3>
+                <button
+                  onClick={() => setShowLogsPanel(true)}
+                  className={`
+                    px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2
+                    ${logs.length > 0 ? 'ring-2 ring-blue-300' : ''}
+                  `}
+                >
+                  <FileText className="w-4 h-4" />
+                  View EU AI Act Analysis Logs
+                  {logs.length > 0 && (
+                    <span className="bg-blue-700 text-white text-xs rounded-full px-2 py-1">
+                      {logs.length > 99 ? '99+' : logs.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Live Chat Overview */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  EU AI Act Analysis Monitoring
+                </h4>
+                <div className="space-y-3 text-blue-800 text-sm">
+                  <p>Real-time monitoring of EU AI Act compliance analysis during conversations.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white p-3 rounded border">
+                      <div className="font-medium text-blue-900">Total Log Entries</div>
+                      <div className="text-2xl font-bold text-blue-600">{logs.length}</div>
+                    </div>
+                    <div className="bg-white p-3 rounded border">
+                      <div className="font-medium text-blue-900">Analysis Categories</div>
+                      <div className="text-sm mt-1">
+                        <div>Webhook: {logs.filter(l => l.category === 'webhook').length}</div>
+                        <div>Analysis: {logs.filter(l => l.category === 'analysis').length}</div>
+                        <div>Database: {logs.filter(l => l.category === 'database').length}</div>
+                        <div>UI: {logs.filter(l => l.category === 'ui').length}</div>
+                        <div>System: {logs.filter(l => l.category === 'system').length}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Recent Analysis Activity</h4>
+                {logs.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {logs.slice(0, 10).map((log) => (
+                      <div key={log.id} className="bg-white p-3 rounded border text-sm">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`
+                            px-2 py-0.5 rounded text-xs font-medium
+                            ${log.category === 'webhook' ? 'bg-purple-100 text-purple-700' :
+                              log.category === 'analysis' ? 'bg-blue-100 text-blue-700' :
+                              log.category === 'database' ? 'bg-green-100 text-green-700' :
+                              log.category === 'ui' ? 'bg-orange-100 text-orange-700' :
+                              'bg-gray-100 text-gray-700'}
+                          `}>
+                            {log.category}
+                          </span>
+                          <span className="text-xs text-gray-500 font-mono">
+                            {log.timestamp.toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <div className="text-gray-700">{log.message}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No analysis activity yet</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Start a conversation to see EU AI Act analysis logs
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Clear Logs */}
+              {logs.length > 0 && (
+                <div className="flex justify-end">
+                  <button
+                    onClick={clearLogs}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                  >
+                    Clear All Logs
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Logs Panel Modal */}
+        <LogsPanel
+          isOpen={showLogsPanel}
+          onClose={() => setShowLogsPanel(false)}
+          logs={logs}
+          onClearLogs={clearLogs}
+        />
       </div>
     </div>
   );
