@@ -4,7 +4,7 @@
 
 A production-ready web application that analyzes conversations with AI systems to determine their risk level under the EU AI Act. Get instant compliance assessments, risk categorization, and regulatory guidance.
 
-![AI Act Scan Demo](./public/Scherm­afbeelding%202025-06-15%20om%2023.47.39.png)
+![AI Act Scan Demo](./public/ai-act-scan-demo.png)
 
 ## 🎯 What It Does
 
